@@ -1,0 +1,679 @@
+
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .phase { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); margin-bottom: 12px; overflow: hidden; }
+  .phase-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; user-select: none; }
+  .phase-header:hover { background: var(--color-background-secondary); }
+  .phase-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+  .phase-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+  .phase-tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+  .phase-body { padding: 0 16px 14px; display: none; }
+  .phase-body.open { display: block; }
+  .prompt-block { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; margin: 8px 0; position: relative; }
+  .prompt-label { font-size: 11px; color: var(--color-text-tertiary); margin: 0 0 6px; font-weight: 500; letter-spacing: 0.06em; }
+  .prompt-text { font-size: 13px; color: var(--color-text-primary); line-height: 1.6; margin: 0; font-family: var(--font-mono); white-space: pre-wrap; }
+  .copy-btn { position: absolute; top: 10px; right: 10px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 4px 8px; font-size: 11px; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+  .copy-btn:hover { background: var(--color-background-secondary); }
+  .note { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; margin: 6px 0 0; padding-left: 12px; border-left: 2px solid var(--color-border-secondary); border-radius: 0; }
+  .chevron { font-size: 14px; color: var(--color-text-tertiary); transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+  .expand-all { font-size: 12px; color: var(--color-text-secondary); cursor: pointer; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 4px 10px; background: none; }
+  .expand-all:hover { background: var(--color-background-secondary); }
+  .progress-bar { height: 3px; background: var(--color-border-tertiary); border-radius: 2px; margin-bottom: 20px; }
+  .progress-fill { height: 100%; border-radius: 2px; background: var(--color-text-info); width: 0%; transition: width 0.4s; }
+  .step-count { font-size: 12px; color: var(--color-text-tertiary); }
+</style>
+
+<div style="padding: 1rem 0">
+
+<div class="toolbar">
+  <div>
+    <div style="font-size:13px; color: var(--color-text-secondary);">Copy each prompt in order into your AI coding tool (Cursor, Claude Code, v0, Bolt)</div>
+  </div>
+  <button class="expand-all" onclick="toggleAll()">Expand all</button>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+
+<div id="phases">
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-info);color:var(--color-text-info);">1</div>
+    <div class="phase-title">Project scaffold & environment</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">Setup</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 1.1 — PROJECT INIT</div>
+      <pre class="prompt-text">Create a new Next.js 14 project called "vyron-ai" using the App Router. Use TypeScript, Tailwind CSS, and ESLint. After scaffolding:
+- Install shadcn/ui and initialise it with the "default" style and "slate" base color
+- Install: framer-motion, @supabase/supabase-js, @supabase/auth-helpers-nextjs, lucide-react, recharts, react-hook-form, zod, zustand, @tanstack/react-query, date-fns, clsx, tailwind-merge
+- Create a .env.local file with placeholder keys: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET
+- Set up the cn() utility in lib/utils.ts
+Show me the final folder structure after setup.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 1.2 — FOLDER ARCHITECTURE</div>
+      <pre class="prompt-text">Create this exact folder structure inside the src/ directory. Create empty index files so the folders exist:
+
+src/
+  app/
+    (auth)/login, signup, forgot-password, verify-otp
+    (dashboard)/dashboard, leads, marketing, finance, reports, analytics, health, settings, billing, notifications, documents, rewards
+    (onboarding)/onboarding
+    api/ (route handlers will go here)
+  components/
+    ui/ (shadcn components)
+    layout/ (sidebar, navbar, mobile-nav)
+    dashboard/ (widget components)
+    copilot/ (AI assistant components)
+    charts/ (recharts wrappers)
+    shared/ (empty states, skeletons, badges)
+  lib/
+    supabase/ (client.ts, server.ts, middleware.ts)
+    openai/ (client.ts, prompts.ts)
+    hooks/ (custom React hooks)
+    stores/ (zustand stores)
+    validators/ (zod schemas)
+    utils/ (helpers)
+  types/
+    index.ts (all TypeScript interfaces)
+  constants/
+    index.ts (plan limits, nav items, etc.)</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 1.3 — TYPESCRIPT TYPES</div>
+      <pre class="prompt-text">In src/types/index.ts, define TypeScript interfaces for all core entities:
+
+User, Business, Team, TeamMember, Lead, Customer, Transaction, Expense, Campaign, Report, Notification, Subscription, AiMemory, Document, Invoice, LoyaltyReward, ActivityLog
+
+Each interface must include:
+- id: string (UUID)
+- created_at: string
+- updated_at: string
+- Relevant typed fields (e.g. Lead has: name, email, phone, status: 'hot'|'warm'|'cold', score: number, business_id)
+
+Also define enums for:
+- PlanTier: 'trial' | 'starter' | 'growth' | 'pro' | 'student'
+- UserRole: 'owner' | 'admin' | 'manager' | 'member' | 'viewer'
+- TransactionType: 'income' | 'expense'
+- LeadStatus: 'hot' | 'warm' | 'cold' | 'converted' | 'lost'</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+    <p class="note">After this phase: you should have a running dev server with no TypeScript errors. Run npm run dev and verify.</p>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-warning);color:var(--color-text-warning);">2</div>
+    <div class="phase-title">Supabase database & auth</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">Backend</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 2.1 — DATABASE SCHEMA</div>
+      <pre class="prompt-text">Generate a complete Supabase SQL migration file (001_initial_schema.sql) that creates these tables with proper relationships, indexes, and Row Level Security (RLS) policies:
+
+Tables: users, businesses, teams, team_members, leads, customers, transactions, expenses, campaigns, reports, subscriptions, ai_memories, documents, invoices, notifications, loyalty_rewards, activity_logs, ai_credits
+
+Requirements:
+- All tables use UUID primary keys with gen_random_uuid()
+- All tables have created_at and updated_at with auto-update triggers
+- Foreign keys: everything links to businesses.id or users.id
+- RLS POLICY for every table: users can only SELECT/INSERT/UPDATE/DELETE rows where business_id = (SELECT business_id FROM users WHERE id = auth.uid())
+- Index on: leads.business_id, leads.status, transactions.business_id, transactions.created_at, customers.business_id
+- subscriptions table must have: plan_tier, ai_credits_total, ai_credits_used, period_start, period_end, razorpay_subscription_id
+- ai_credits table: tracks per-feature usage (feature_name, tokens_used, cost_inr, user_id, business_id)</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 2.2 — SUPABASE CLIENT SETUP</div>
+      <pre class="prompt-text">Set up Supabase clients for the Next.js 14 App Router pattern:
+
+1. src/lib/supabase/client.ts — browser client using createClientComponentClient
+2. src/lib/supabase/server.ts — server client using createServerComponentClient with cookies
+3. src/lib/supabase/middleware.ts — session refresh middleware
+4. src/middleware.ts — protect all /dashboard and /onboarding routes. Redirect unauthenticated users to /login. Redirect users who haven't completed onboarding (no business record) to /onboarding.
+
+Also create src/lib/supabase/queries.ts with typed query functions:
+- getUserWithBusiness(userId)
+- getBusinessById(businessId)
+- getDashboardStats(businessId, dateRange)
+- getLeads(businessId, filters)
+- getTransactions(businessId, month, year)</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 2.3 — AUTH PAGES</div>
+      <pre class="prompt-text">Build the authentication pages with a premium dark/light design:
+
+1. /login — email + password form, Google OAuth button, "Forgot password" link. On success redirect to /dashboard.
+2. /signup — name, email, password, confirm password. After signup redirect to /onboarding.
+3. /forgot-password — email input, send reset link via Supabase.
+4. /verify-otp — 6-digit OTP input UI (visual boxes, not a single text field).
+
+Design requirements:
+- Left panel: VYRON AI logo + animated tagline "Your AI Workforce & Growth Operating System"
+- Right panel: the form in a glass card
+- Dark mode default, toggle for light
+- Use framer-motion for form entrance animation (fade up)
+- Show toast notification on error/success using shadcn/ui Toaster
+- Full form validation with react-hook-form + zod
+- Loading spinner on submit button</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+    <p class="note">After this phase: test login, signup, and protected route redirect before proceeding.</p>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-success);color:var(--color-text-success);">3</div>
+    <div class="phase-title">Layout, sidebar & onboarding</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">UI Shell</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 3.1 — DASHBOARD LAYOUT</div>
+      <pre class="prompt-text">Build the main dashboard layout in src/app/(dashboard)/layout.tsx:
+
+Sidebar (desktop, 240px wide):
+- VYRON AI logo at top
+- Navigation sections: Main (Dashboard, AI Copilot), Business (Leads, Marketing, Finance), Reports (Reports, Analytics, Health Score), Account (Settings, Billing, Notifications)
+- Each nav item: icon (lucide-react) + label + active state highlight
+- Business name + plan badge at bottom
+- Collapse toggle button
+
+Top navbar:
+- Page title (dynamic)
+- Global search bar (cmd+K)
+- Notifications bell with badge count
+- User avatar dropdown (Profile, Settings, Logout)
+- Theme toggle (dark/light)
+
+Mobile (< 768px):
+- Hide sidebar, show bottom tab navigation with 5 items: Home, Leads, AI, Finance, More
+- Hamburger menu for full nav
+
+Use framer-motion for sidebar slide animation. The layout must wrap all /dashboard/* routes. Use zustand for sidebar collapsed state.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 3.2 — ONBOARDING WIZARD</div>
+      <pre class="prompt-text">Build a multi-step onboarding wizard at /onboarding with 5 steps. Use a progress bar at the top and framer-motion slide transitions between steps.
+
+Step 1 — Business type: Grid of cards to select from (E-commerce, Freelancer, Agency, Startup, Retail Shop, Student/Personal, Restaurant, Service Business). Each card has an icon and label.
+
+Step 2 — Business details: Business name, GST number (optional), city, monthly revenue range (dropdown), team size.
+
+Step 3 — Goals: Multi-select checkboxes for (Increase Revenue, Manage Expenses, Get More Leads, Automate Marketing, Track Business Health, Generate Reports).
+
+Step 4 — AI customization: "What should your AI focus on first?" — same goal cards but ranked by drag-and-drop.
+
+Step 5 — Done screen: Animated celebration, "Your AI workspace is ready" message, summary of what was set up, "Go to Dashboard" button.
+
+On completion: Save business record to Supabase, create default subscription (trial), redirect to /dashboard.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-info);color:var(--color-text-info);">4</div>
+    <div class="phase-title">Main dashboard & analytics widgets</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">Core UI</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 4.1 — DASHBOARD PAGE</div>
+      <pre class="prompt-text">Build the main dashboard page at /dashboard using demo data (hardcoded for now, we'll connect Supabase later).
+
+Row 1 — Stat cards (4 across):
+- Total Revenue this month (₹ formatted)
+- Total Expenses
+- Net Profit (green if positive, red if negative)
+- AI Business Health Score (0-100 with a circular progress ring)
+
+Row 2 — Charts (2 columns):
+- Revenue vs Expenses bar chart (last 6 months) using recharts BarChart
+- Lead conversion funnel chart using recharts FunnelChart
+
+Row 3 — Two panels:
+- Left: "AI Daily Briefing" card — a paragraph of AI-generated insight text, refresh button, skeleton loader state
+- Right: "Recent Activity" feed — timestamped list of actions (new lead added, invoice sent, etc.)
+
+Row 4 — Quick action buttons:
+- Add Transaction, Add Lead, Generate Report, Ask AI
+
+Each stat card must have: icon, label, value, percentage change vs last month (up/down arrow), skeleton loading state.
+Use framer-motion staggered fade-up animation for cards on page load.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 4.2 — REUSABLE CHART COMPONENTS</div>
+      <pre class="prompt-text">Create reusable chart wrapper components in src/components/charts/:
+
+1. RevenueBarChart.tsx — accepts data prop, renders recharts BarChart with custom tooltip showing ₹ formatted values, responsive, dark/light mode compatible
+2. LeadFunnelChart.tsx — pipeline stages: Total → Contacted → Qualified → Proposal → Won
+3. ExpensePieChart.tsx — category breakdown with recharts PieChart + legend
+4. GrowthLineChart.tsx — revenue trend over time with recharts LineChart + area fill
+5. MetricCard.tsx — reusable stat card with icon, title, value, change percentage, optional sparkline
+
+All charts must:
+- Use CSS variables for colors so they adapt to dark/light mode
+- Have a loading skeleton prop
+- Have an empty state with a friendly message
+- Be fully responsive using recharts ResponsiveContainer</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-warning);color:var(--color-text-warning);">5</div>
+    <div class="phase-title">AI Copilot assistant</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">AI Core</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 5.1 — COPILOT API ROUTE</div>
+      <pre class="prompt-text">Create an API route at src/app/api/copilot/route.ts:
+
+- POST handler that accepts: { messages: ChatMessage[], businessContext: BusinessContext }
+- Validates the user's session via Supabase (reject if unauthenticated)
+- Checks ai_credits: if credits exhausted, return 402 with { error: 'credits_exhausted' }
+- Builds a system prompt that includes:
+  * Business name, type, current month revenue, expense summary
+  * User's role and goals from onboarding
+  * Today's date and current plan
+  * Instructions: "You are VYRON, an AI business advisor for Indian businesses. Answer in the user's preferred language. Always give specific, actionable advice. Format numbers in Indian number system (lakhs, crores). Never give generic advice."
+- Calls OpenAI gpt-4o-mini for simple queries, gpt-4o for complex analysis (detect complexity by prompt length + keywords like "analyze", "forecast", "strategy")
+- Streams the response using ReadableStream
+- After completion, logs token usage to ai_credits table
+- Rate limit: max 20 requests per user per hour (use a simple Supabase counter)</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 5.2 — COPILOT UI COMPONENT</div>
+      <pre class="prompt-text">Build the AI Copilot as a floating panel component in src/components/copilot/:
+
+Trigger: floating button (bottom-right, 56px circle with brain/sparkle icon) visible on all dashboard pages.
+
+Panel (480px wide, 600px tall, slides up from bottom-right):
+- Header: "VYRON AI" title, minimize and close buttons, model badge (GPT-4o / GPT-4o-mini)
+- Messages area: chat bubbles (user right, AI left), AI messages render markdown, code blocks syntax highlighted
+- Suggested prompts (shown when chat is empty):
+  * "What's my business health score this month?"
+  * "Write an Instagram caption for my product"
+  * "Analyze my top expenses and suggest cuts"
+  * "Forecast my revenue for next quarter"
+- Input area: textarea (auto-resize), send button, character count, attach file button (UI only)
+- Streaming: show typing indicator dots while response streams, then replace with streamed text
+- Chat history: persist in localStorage per session
+- Credits display: "142 AI credits remaining" shown in header
+
+Use framer-motion for panel open/close animation (scale + opacity). The floating button should pulse subtly when the AI has a new insight.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-danger);color:var(--color-text-danger);">6</div>
+    <div class="phase-title">Lead CRM, finance & marketing pages</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">Features</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 6.1 — LEAD MANAGEMENT PAGE</div>
+      <pre class="prompt-text">Build the Lead Management page at /dashboard/leads:
+
+Layout: Kanban board with 4 columns: Hot, Warm, Cold, Converted.
+Each lead card shows: name, company, phone, AI score badge (0-100), last contact date, follow-up tag.
+Card actions: Edit, Delete, Move to another column, Log interaction.
+
+Top bar:
+- "Add Lead" button (opens a shadcn/ui Sheet/drawer with a form)
+- Search input (filters leads by name/company)
+- Filter dropdown (by score range, date added, assigned to)
+- View toggle (Kanban / Table)
+
+Table view: sortable columns, bulk select + delete, export to CSV button.
+
+Add Lead form fields: Name, Company, Email, Phone, Lead Source (dropdown), Estimated Deal Value (₹), Notes, Assign To (team member select).
+
+AI Score: After saving a lead, call /api/ai/score-lead which sends lead data to OpenAI and returns a score 0-100 with 2-line reasoning. Display this in the card.
+
+Connect to Supabase: fetch leads for the current business, real-time updates using Supabase subscriptions.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 6.2 — FINANCE PAGE</div>
+      <pre class="prompt-text">Build the Finance & Transactions page at /dashboard/finance:
+
+Top summary bar: This month's Income, Expenses, Net Profit (3 metric cards).
+
+Two tabs: Transactions | Expenses
+
+Transactions tab:
+- Table with columns: Date, Description, Category, Type (Income/Expense), Amount (₹), Payment method, Actions
+- "Add Transaction" button opens a form: date picker, description, amount, category (dropdown with icons: Sales, Services, Refund, etc.), type toggle (Income/Expense), payment method, attach receipt (UI only)
+- Filter by: date range, category, type
+- Monthly summary card on the right: bar chart of daily cash flow
+
+Expenses tab:
+- Pie chart of expenses by category
+- List of top 5 spending categories
+- "Unusual spending" AI alert card: if any category is 30%+ above last month's average, show a warning with AI explanation
+
+GST Summary section (below tabs):
+- Total taxable income, estimated GST payable (18%), GST input credit estimate
+- "Generate GST Report" button
+
+All data connects to Supabase transactions and expenses tables with real-time totals.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 6.3 — AI MARKETING ENGINE PAGE</div>
+      <pre class="prompt-text">Build the AI Marketing page at /dashboard/marketing:
+
+Layout: Left sidebar with tool categories, right content area.
+
+Tool categories and their generators:
+1. Social Media — Instagram caption, Facebook post, Twitter/X thread
+2. WhatsApp — Campaign message, broadcast template, festival wish
+3. Ad Copy — Google Ad headline + description, Meta Ad copy
+4. Content — Blog intro, Product description, Email subject line
+5. Video — YouTube script outline, Reel hook, Video title ideas
+6. Festival — Auto-detect upcoming Indian festivals, generate themed campaigns
+
+Each generator UI:
+- Input form (product name, target audience, tone selector: Professional/Casual/Funny/Urgent)
+- "Generate" button → calls /api/ai/generate-content route
+- Output area: generated text with copy button, regenerate button, character count
+- "Save to Campaign" button
+
+Campaign tracker section:
+- List of saved campaigns with: name, type, date, status (Draft/Active/Completed)
+- Simple analytics placeholder: "Connect your Meta/Google account to see performance" CTA
+
+Content Calendar:
+- Monthly calendar view
+- Click a date to schedule content
+- Upcoming scheduled posts list</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-info);color:var(--color-text-info);">7</div>
+    <div class="phase-title">Reports, health score & analytics</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">Intelligence</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 7.1 — BUSINESS HEALTH SCORE PAGE</div>
+      <pre class="prompt-text">Build the AI Business Health page at /dashboard/health:
+
+Hero section: Large circular score display (0-100) with animated ring using framer-motion. Score color: 0-40 red, 41-70 amber, 71-100 green. Below it: "Your business is GROWING" / "Needs Attention" / "Critical" status label.
+
+Score breakdown (6 sub-scores as horizontal progress bars):
+- Revenue Health (based on MoM growth)
+- Expense Control (expense/revenue ratio)
+- Lead Pipeline Health (conversion rate)
+- Cash Flow (days of runway)
+- Customer Retention (repeat customer %)
+- Marketing Consistency (campaigns this month)
+
+AI Insights section (3 cards):
+- "What's working well" — 2-3 positive points
+- "What needs attention" — 2-3 risk areas with action steps
+- "This week's focus" — single top priority recommendation
+
+AI Forecast section:
+- "Projected revenue next month" with confidence range
+- Simple line chart showing actual vs projected
+
+All AI content is generated via /api/ai/business-health route that takes the last 90 days of transactions and leads data and returns structured JSON with scores and insights.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 7.2 — REPORTS PAGE</div>
+      <pre class="prompt-text">Build the Reports page at /dashboard/reports:
+
+Report types available (as a grid of cards):
+- Daily Summary, Weekly Performance, Monthly P&L, Quarterly Review, Annual Business Report, GST Summary, Lead Report, Campaign Performance
+
+Each report card: icon, title, description, "Generate" button, "Schedule" toggle.
+
+On clicking "Generate":
+1. Show loading state with "AI is compiling your report..."
+2. Call /api/reports/generate with report type and date range
+3. The API fetches relevant data from Supabase, sends to OpenAI with a structured prompt, gets back a JSON report structure
+4. Render the report inline: header, summary paragraph, data tables, key metrics, AI recommendations section
+5. Show "Download PDF" button (for now just show a toast: "PDF generation coming soon") and "Share via Email" button
+
+Report scheduling UI:
+- Toggle to enable auto-generation
+- Frequency selector: Daily / Weekly / Monthly
+- Delivery: Email (input), WhatsApp (UI only)
+
+Recent reports list at bottom: name, date generated, type, download button.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-success);color:var(--color-text-success);">8</div>
+    <div class="phase-title">Billing, settings & landing page</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">Polish</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 8.1 — BILLING & SUBSCRIPTION PAGE</div>
+      <pre class="prompt-text">Build the Billing page at /dashboard/billing:
+
+Current plan card: plan name, status (Active/Trial), renewal date, AI credits used/total as a progress bar, "Upgrade" button.
+
+Pricing cards (4 plans side by side, Growth plan highlighted as "Most Popular"):
+- Free Trial — 7 days, 50 AI credits, 1 user, core features only
+- Starter — ₹999/mo, 500 AI credits, 3 users, Leads + Finance
+- Growth — ₹1,999/mo, 2000 AI credits, 10 users, all features, priority support
+- Pro — ₹2,999/mo, unlimited AI credits, unlimited users, white-label, API access
+- Student — ₹299/mo (show "Verify with college email" button)
+
+Feature comparison: Show a table below the cards listing 15 features and which plans include them (checkmarks).
+
+Payment section:
+- "Upgrade to Growth" CTA button → opens a shadcn Dialog with Razorpay payment UI mockup (show a card form UI, note this is the Razorpay integration point)
+- Billing history table: Date, Plan, Amount, Invoice (download icon)
+- Payment method card: masked card number, expiry, "Update" button
+
+AI Credits explainer: Accordion FAQ explaining what uses credits (copilot messages, report generation, lead scoring, content generation) with approximate costs per action.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 8.2 — SETTINGS PAGE</div>
+      <pre class="prompt-text">Build the Settings page at /dashboard/settings with a left tab navigation:
+
+Tab 1 — Profile: Avatar upload (UI only), name, email (read-only), phone, preferred language (Hindi/English/Gujarati/Marathi selector), timezone.
+
+Tab 2 — Business: Business name, type, GST number, address, logo upload, website URL, business category.
+
+Tab 3 — Team: Table of team members (name, email, role, status). Invite member button (opens a dialog with email + role select). Role options: Admin, Manager, Member, Viewer. Each role's permissions listed in an accordion below the table.
+
+Tab 4 — Notifications: Toggle switches for: Daily AI briefing email, Weekly report email, Lead follow-up reminders, Payment alerts, Security alerts. Delivery channels: Email, WhatsApp (with phone number input).
+
+Tab 5 — Security: Change password form, Active sessions list (device, location, last seen), "Logout all devices" button. 2FA toggle (shows "Coming soon" badge).
+
+Tab 6 — Integrations: Cards for each integration: Razorpay (connected/connect button), Google Calendar (UI), WhatsApp Business API (UI), Tally (UI), Google Sheets (UI). Each card shows connection status and a settings/disconnect button.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 8.3 — PUBLIC LANDING PAGE</div>
+      <pre class="prompt-text">Build the public landing page at / (src/app/page.tsx):
+
+Section 1 — Hero: Full-viewport. "Your AI Workforce & Growth Operating System" headline (large, bold). Subheadline: "VYRON AI automates your business operations, marketing, finance, and growth — built for Indian businesses." Two CTAs: "Start Free Trial" (primary) and "Watch Demo" (secondary). Animated dashboard mockup screenshot on the right side using framer-motion float animation.
+
+Section 2 — Social proof: Logos of business types served (Freelancers, Agencies, Startups, Retailers, Restaurants) + "Trusted by 2,000+ businesses" stat.
+
+Section 3 — Features (3 column grid, 6 cards): AI Business Health Score, Lead Pipeline CRM, AI Marketing Engine, Finance & GST Tracker, Automated Reports, Global AI Copilot. Each card: icon, title, 2-line description.
+
+Section 4 — How it works: 3-step horizontal flow: Onboard → Connect Data → AI Does the Work.
+
+Section 5 — Pricing: Same 4 plan cards as the billing page.
+
+Section 6 — Testimonials: 3 quote cards with avatar, name, business type, star rating.
+
+Section 7 — FAQ: Accordion with 8 common questions.
+
+Section 8 — Final CTA: "Start your 7-day free trial" with email input + button.
+
+Footer: Logo, nav links, social icons, "Made in India" badge, Privacy Policy and Terms links.
+
+Use framer-motion scroll-triggered animations (viewport: { once: true }) on each section.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-header" onclick="toggle(this)">
+    <div class="phase-num" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">9</div>
+    <div class="phase-title">Polish, security & launch checklist</div>
+    <span class="phase-tag" style="background:var(--color-background-secondary);color:var(--color-text-secondary);">Final</span>
+    <i class="ti ti-chevron-down chevron"></i>
+  </div>
+  <div class="phase-body">
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 9.1 — SHARED COMPONENTS POLISH</div>
+      <pre class="prompt-text">Create these reusable shared components:
+
+1. src/components/shared/PageHeader.tsx — page title + breadcrumb + optional action button slot
+2. src/components/shared/EmptyState.tsx — icon, title, description, optional CTA button. Variants: no-data, no-results, error, coming-soon
+3. src/components/shared/SkeletonCard.tsx — animated pulse skeleton for stat cards, list items, and table rows
+4. src/components/shared/DataTable.tsx — reusable table with: sortable columns, search, pagination (10/25/50 per page), loading state, empty state, row actions dropdown
+5. src/components/shared/ConfirmDialog.tsx — shadcn AlertDialog wrapper: title, description, confirm (destructive) and cancel buttons
+6. src/components/shared/PlanGate.tsx — wrapper component that shows children if user's plan includes the feature, otherwise shows an upgrade prompt card
+
+Also create a useToast pattern that shows contextual success/error messages with relevant icons throughout the app.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 9.2 — SECURITY & RATE LIMITING</div>
+      <pre class="prompt-text">Add security hardening across all API routes:
+
+1. Create src/lib/utils/rateLimit.ts — a simple in-memory rate limiter using a Map. Function: checkRateLimit(userId, feature, maxRequests, windowSeconds). Returns { allowed: boolean, remaining: number, resetAt: Date }.
+
+2. Apply rate limits to API routes:
+   - /api/copilot: 20 requests/hour per user
+   - /api/ai/*: 50 requests/hour per user  
+   - /api/auth/*: 10 requests/15min per IP
+
+3. Create src/lib/utils/validatePlan.ts — function that checks if a user's current plan allows a feature. Map features to minimum plan tiers.
+
+4. Add input sanitization to all form-handling API routes — strip HTML tags, validate email format, validate phone numbers as Indian format (+91 or 10-digit).
+
+5. Add CORS headers to all API routes — only allow requests from the app's own domain.
+
+6. Create src/app/api/health/route.ts — public health check endpoint returning { status: 'ok', timestamp, version }.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+
+    <div class="prompt-block">
+      <div class="prompt-label">PROMPT 9.3 — FINAL LAUNCH PREP</div>
+      <pre class="prompt-text">Final production readiness tasks:
+
+1. next.config.js: Add security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Content-Security-Policy). Enable image optimization for Supabase storage domain.
+
+2. Create src/app/sitemap.ts — generate sitemap for public pages only (/, /login, /signup, pricing page).
+
+3. Create src/app/robots.ts — disallow all /dashboard and /api routes.
+
+4. Add loading.tsx files for each dashboard route group — show skeleton UI while data loads.
+
+5. Add error.tsx files for each dashboard route group — show a friendly error card with "Retry" button and "Contact Support" link.
+
+6. Add not-found.tsx — custom 404 page with VYRON AI branding and "Back to Dashboard" button.
+
+7. Create a PWA manifest at public/manifest.json: name "VYRON AI", short_name "VYRON", theme_color matches brand, icons for 192px and 512px, display: "standalone", start_url: "/dashboard".
+
+8. Audit all pages: confirm every page has a loading skeleton, empty state, error state, and is mobile responsive. List any gaps found.</pre>
+      <button class="copy-btn" onclick="copyText(this)"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+    </div>
+    <p class="note">After this phase: run a full manual test on mobile and desktop. Test auth flow, lead creation, AI copilot, and billing page before going live.</p>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+function toggle(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.chevron');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+  updateProgress();
+}
+
+function toggleAll() {
+  const allBodies = document.querySelectorAll('.phase-body');
+  const allChevrons = document.querySelectorAll('.chevron');
+  const anyOpen = document.querySelector('.phase-body.open');
+  allBodies.forEach(b => b.classList.toggle('open', !anyOpen));
+  allChevrons.forEach(c => c.classList.toggle('open', !anyOpen));
+  document.querySelector('.expand-all').textContent = anyOpen ? 'Expand all' : 'Collapse all';
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = document.querySelectorAll('.phase').length;
+  const open = document.querySelectorAll('.phase-body.open').length;
+  document.getElementById('prog').style.width = Math.round((open/total)*100) + '%';
+}
+
+function copyText(btn) {
+  const text = btn.closest('.prompt-block').querySelector('.prompt-text').textContent;
+  navigator.clipboard.writeText(text.trim()).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> Copied';
+    setTimeout(() => btn.innerHTML = orig, 1800);
+  });
+}
+</script>

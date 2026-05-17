@@ -19,23 +19,23 @@ export async function createWorkspace(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const businessId = crypto.randomUUID();
   const slug = `${slugify(name)}-${user.id.slice(0, 6)}`;
 
-  const { data: business, error: bizError } = await supabase
+  const { error: bizError } = await supabase
     .from('businesses')
     .insert({
+      id: businessId,
       name,
       slug,
       gstin,
       created_by: user.id,
-    })
-    .select('id')
-    .single();
+    });
 
-  if (bizError || !business) throw new Error(bizError?.message ?? 'Failed to create business');
+  if (bizError) throw new Error(bizError.message ?? 'Failed to create business');
 
   await supabase.from('memberships').insert({
-    business_id: business.id,
+    business_id: businessId,
     user_id: user.id,
     role: 'owner',
     accepted_at: new Date().toISOString(),
@@ -44,7 +44,7 @@ export async function createWorkspace(formData: FormData) {
 
   const trialEnd = trialEndsAt();
   await supabase.from('subscriptions').insert({
-    business_id: business.id,
+    business_id: businessId,
     plan: 'starter',
     status: 'trialing',
     trial_ends_at: trialEnd.toISOString(),
@@ -54,7 +54,7 @@ export async function createWorkspace(formData: FormData) {
   });
 
   const cookieStore = await cookies();
-  cookieStore.set('vyron_workspace', business.id, {
+  cookieStore.set('vyron_workspace', businessId, {
     path: '/',
     maxAge: 60 * 60 * 24 * 365,
     sameSite: 'lax',

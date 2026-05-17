@@ -73,6 +73,7 @@ export async function POST(request: Request) {
     if (e instanceof AIQuotaError) {
       return NextResponse.json({ error: e.message, code: e.code }, { status: 429 });
     }
+    console.error('AI Request Error:', e);
     return NextResponse.json({ error: 'AI request failed' }, { status: 500 });
   }
 }

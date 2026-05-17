@@ -23,6 +23,10 @@ CREATE POLICY memberships_update ON public.memberships FOR UPDATE
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY subscriptions_select ON public.subscriptions FOR SELECT
   USING (business_id IN (SELECT public.user_business_ids()));
+CREATE POLICY subscriptions_insert ON public.subscriptions FOR INSERT
+  WITH CHECK (created_by = auth.uid());
+CREATE POLICY subscriptions_update ON public.subscriptions FOR UPDATE
+  USING (business_id IN (SELECT public.user_business_ids()));
 
 -- Tenant tables macro pattern
 DO $$

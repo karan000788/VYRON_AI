@@ -2,7 +2,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { SubscriptionPlan } from '@/types/database';
 import { routeAIModel, type AITaskType } from './route-model';
 import { creditsForTokens } from './credits';
-import OpenAI from 'openai';
+import { generateText, type CoreMessage } from 'ai';
+import { google } from '@ai-sdk/google';
 
 const ABUSE_WINDOW_MS = 10 * 60 * 1000;
 const ABUSE_THRESHOLD = 100;
@@ -68,7 +69,7 @@ export async function runAIRequest(params: {
   businessId: string;
   userId: string;
   taskType: AITaskType;
-  messages: OpenAI.Chat.ChatCompletionMessageParam[];
+  messages: CoreMessage[];
   requestId?: string;
 }): Promise<{ content: string; model: string; creditsUsed: number }> {
   const { plan } = await enforceQuota(params.businessId);
@@ -78,16 +79,14 @@ export async function runAIRequest(params: {
     throw new AIQuotaError('Upgrade plan for this AI feature', 'PLAN_DENIED');
   }
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const completion = await openai.chat.completions.create({
-    model,
+  const { text: content, usage } = await generateText({
+    model: google(model),
     messages: params.messages,
     temperature: 0.4,
   });
 
-  const content = completion.choices[0]?.message?.content ?? '';
-  const promptTokens = completion.usage?.prompt_tokens ?? 0;
-  const completionTokens = completion.usage?.completion_tokens ?? 0;
+  const promptTokens = usage.promptTokens ?? 0;
+  const completionTokens = usage.completionTokens ?? 0;
   const creditsUsed = creditsForTokens(promptTokens, completionTokens);
 
   const admin = createAdminClient();

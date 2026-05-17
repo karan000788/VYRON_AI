@@ -5,9 +5,9 @@ export type AITaskType = 'basic' | 'advanced' | 'workflow';
 export function routeAIModel(
   plan: SubscriptionPlan,
   taskType: AITaskType
-): 'gpt-4o-mini' | 'gpt-4o' {
-  if (plan === 'starter') return 'gpt-4o-mini';
-  if (plan === 'growth' && taskType === 'advanced') return 'gpt-4o';
-  if (plan === 'pro') return 'gpt-4o';
-  return 'gpt-4o-mini';
+): 'gemini-1.5-flash' | 'gemini-1.5-pro' {
+  if (plan === 'starter') return 'gemini-1.5-flash';
+  if (plan === 'growth' && taskType === 'advanced') return 'gemini-1.5-pro';
+  if (plan === 'pro') return 'gemini-1.5-pro';
+  return 'gemini-1.5-flash';
 }

@@ -11,6 +11,9 @@ interface ChartProps {
   businessId: string;
 }
 
+// Color cycles for donut chart — defined at module level to be a stable reference
+const COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#34d399', '#fbbf24', '#f87171'];
+
 export function DashboardCharts({ businessId }: ChartProps) {
   const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -21,9 +24,6 @@ export function DashboardCharts({ businessId }: ChartProps) {
   const [revenueExpensesData, setRevenueExpensesData] = useState<{ label: string; income: number; expense: number }[]>([]);
   const [categoryData, setCategoryData] = useState<{ category: string; amount: number; pct: number; color: string }[]>([]);
   const [gstData, setGstData] = useState<{ cgst: number; sgst: number; igst: number; total: number }>({ cgst: 0, sgst: 0, igst: 0, total: 0 });
-
-  // Color cycles for donut chart
-  const COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#34d399', '#fbbf24', '#f87171'];
 
   useEffect(() => {
     async function fetchLedger() {
@@ -384,21 +384,22 @@ export function DashboardCharts({ businessId }: ChartProps) {
                     accumulatedPercent += d.pct;
                     
                     return (
-                      <circle
-                        key={d.category}
-                        cx="50"
-                        cy="50"
-                        r={radius}
-                        stroke={d.color}
-                        strokeWidth="12"
-                        fill="none"
-                        strokeDasharray={strokeDasharray}
-                        strokeDashoffset={strokeDashoffset}
-                        transform={`rotate(${rotation} 50 50)`}
-                        className="transition-all hover:scale-105 hover:stroke-[14px] cursor-pointer"
-                        style={{ transformOrigin: '50% 50%' }}
-                        title={`${d.category}: ${d.pct}%`}
-                      />
+                      <g key={d.category}>
+                        <title>{d.category}: {d.pct}%</title>
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          stroke={d.color}
+                          strokeWidth="12"
+                          fill="none"
+                          strokeDasharray={strokeDasharray}
+                          strokeDashoffset={strokeDashoffset}
+                          transform={`rotate(${rotation} 50 50)`}
+                          className="transition-all hover:scale-105 hover:stroke-[14px] cursor-pointer"
+                          style={{ transformOrigin: '50% 50%' }}
+                        />
+                      </g>
                     );
                   });
                 })()
@@ -455,7 +456,7 @@ export function DashboardCharts({ businessId }: ChartProps) {
               <span className="font-extrabold text-cyan-400 text-sm font-mono">{formatINR(gstData.total)}</span>
             </div>
             <p className="text-[10px] text-zinc-600 leading-normal pt-1.5">
-              Liability splits are formulated from transactions where "Include GST" is flagged. Maintain local compliance by generating matching invoices.
+              Liability splits are formulated from transactions where &quot;Include GST&quot; is flagged. Maintain local compliance by generating matching invoices.
             </p>
           </div>
         </CardContent>

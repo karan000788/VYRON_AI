@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { User } from '@supabase/supabase-js';
@@ -87,12 +87,12 @@ export function DashboardShell({
     }
   };
 
-  // Sound triggering proxy
-  const triggerChime = (type: 'success' | 'warning' | 'info' | 'delete') => {
+  // Sound triggering proxy — memoized so it's a stable dep for the keyboard useEffect
+  const triggerChime = useCallback((type: 'success' | 'warning' | 'info' | 'delete') => {
     if (soundEnabled) {
       playChime(type);
     }
-  };
+  }, [soundEnabled]);
 
   useEffect(() => {
     setWorkspaces(initialWorkspaces);
@@ -164,7 +164,7 @@ export function DashboardShell({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [router, soundEnabled]);
+  }, [router, soundEnabled, triggerChime]);
 
   const initials =
     user.user_metadata?.full_name?.slice(0, 2)?.toUpperCase() ??
@@ -559,7 +559,7 @@ export function DashboardShell({
                     );
                   })
                 ) : (
-                  <p className="text-zinc-600 text-xs text-center py-6">No commands found for "{cmdSearch}"</p>
+                  <p className="text-zinc-600 text-xs text-center py-6">No commands found for &quot;{cmdSearch}&quot;</p>
                 )}
               </div>
             </motion.div>

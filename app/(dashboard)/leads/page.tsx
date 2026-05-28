@@ -139,7 +139,12 @@ export default function LeadsPage() {
 
   return (
     <>
-      {error && <ErrorBanner message={error} onClose={() => setError(null)} />}
+      {error && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-400">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-white">✕</button>
+        </div>
+      )}
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -173,7 +178,7 @@ export default function LeadsPage() {
                 {isLoading && <Skeleton className="h-40 w-full rounded-xl" />}
                 {!isLoading && !data?.length ? (
                   <div className="rounded-xl border border-dashed border-white/10 p-12 text-center text-zinc-500">
-                    Pipeline empty. Click "Add Lead" to register prospective deals.
+                    Pipeline empty. Click &quot;Add Lead&quot; to register prospective deals.
                   </div>
                 ) : (
                   <div className="space-y-2.5">

@@ -205,7 +205,7 @@ export default function InvoicesPage() {
 
       mutate(['invoices', activeId], (current) => {
   if (!current) return current;
-  return current.map(i => i.id === inv.id ? { ...i, status: 'paid' } : i);
+  return current.map((i: Invoice) => i.id === inv.id ? { ...i, status: 'paid' } : i);
 }, false);
       
       // Play native audio success sweep
@@ -462,7 +462,7 @@ export default function InvoicesPage() {
             <AlertCircle className="h-8 w-8 text-zinc-600 animate-pulse" />
             <h6 className="text-sm font-bold text-zinc-400">No invoices generated yet</h6>
             <p className="text-xs max-w-sm">
-              Click the "Create Invoice" button above to formulate professional GST compliant client invoices.
+              Click the &quot;Create Invoice&quot; button above to formulate professional GST compliant client invoices.
             </p>
           </div>
         ) : (
@@ -513,7 +513,7 @@ export default function InvoicesPage() {
                               whileTap={{ scale: 0.94 }}
                               onClick={async (e) => {
                                 e.stopPropagation();
-                                playChime('click');
+                                playChime('info');
                                 setPayingId(inv.id);
                                 await handleMarkAsPaid(inv);
                                 setPayingId(null);

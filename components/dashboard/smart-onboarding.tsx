@@ -265,7 +265,7 @@ export function SmartOnboarding() {
               ))}
             </ul>
             <p className="border-t border-white/5 pt-2 italic text-[10px]">
-              "{activeTemplate.strategy}"
+              &quot;{activeTemplate.strategy}&quot;
             </p>
           </CardContent>
         </Card>

@@ -272,7 +272,7 @@ export default function LandingPage() {
         {/* Testimonials */}
         <section className="pt-24 space-y-10">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-extrabold text-white tracking-tight">Loved by India's Top Operators</h2>
+            <h2 className="text-2xl font-extrabold text-white tracking-tight">Loved by India&apos;s Top Operators</h2>
             <p className="text-xs text-zinc-500 font-mono">Real audits from Indian freelancers, agencies, and developers</p>
           </div>
 
@@ -295,7 +295,7 @@ export default function LandingPage() {
               },
             ].map((t, idx) => (
               <div key={idx} className="rounded-2xl border border-white/5 bg-zinc-950/40 p-5 text-left text-xs leading-relaxed space-y-4">
-                <p className="text-zinc-300 italic">"{t.text}"</p>
+                <p className="text-zinc-300 italic">&quot;{t.text}&quot;</p>
                 <div>
                   <h6 className="font-bold text-white">{t.name}</h6>
                   <p className="text-[10px] text-zinc-500">{t.role}</p>

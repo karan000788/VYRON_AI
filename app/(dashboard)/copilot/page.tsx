@@ -280,7 +280,7 @@ export default function CopilotPage() {
                   transition={{ delay: 0.2 }}
                   className="mb-12 text-center text-zinc-400 max-w-md"
                 >
-                  I'm your VYRON AI Copilot. I can write code, brainstorm ideas, analyze data, and help you navigate the dashboard.
+                  I&apos;m your VYRON AI Copilot. I can write code, brainstorm ideas, analyze data, and help you navigate the dashboard.
                 </motion.p>
                 
                 <div className="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">

@@ -305,7 +305,7 @@ export default function ReportsPage() {
                 ) : (
                   <div className="rounded-xl border border-white/5 bg-black/40 p-4 text-center">
                     <p className="text-[10px] text-zinc-500">
-                      Click the "Run AI Forecast" button inside the chart header to overlay future cashflow lines.
+                      Click the &quot;Run AI Forecast&quot; button inside the chart header to overlay future cashflow lines.
                     </p>
                   </div>
                 )}

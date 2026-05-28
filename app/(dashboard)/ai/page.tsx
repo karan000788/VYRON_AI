@@ -90,7 +90,7 @@ export default function AIPage() {
                 <div className="space-y-0.5">
                   <h6 className="font-bold text-white text-[11px]">Inactive Hot CRM Lead</h6>
                   <p className="text-[10px] text-zinc-400 leading-normal">
-                    Lead "Karan gaming store retainer" has been cold for over 72 hours.
+                    Lead &quot;Karan gaming store retainer&quot; has been cold for over 72 hours.
                   </p>
                 </div>
                 <Button

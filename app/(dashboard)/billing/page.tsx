@@ -5,8 +5,17 @@ import { useSubscription } from '@/hooks/use-subscription';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PLAN_CREDITS } from '@/types/subscription';
+import { useWorkspaceStore } from '@/stores/workspace-store';
+import {
+  activateStarterPlan,
+  activateGrowthPlan,
+  activateProPlan,
+  resetSubscription,
+} from '@/lib/dev/fake-subscription';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Sparkles, CreditCard, Calendar, Zap, ArrowRight } from 'lucide-react';
+import { Check, Sparkles, CreditCard, Calendar, Zap, ArrowRight, ShieldAlert, FileText, CheckCircle2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 const PLANS = [
   {
@@ -17,6 +26,7 @@ const PLANS = [
     yearlyPrice: 9990,
     credits: PLAN_CREDITS.starter,
     features: ['Access to basic AI models', 'Standard support', 'Community access', 'Basic reporting'],
+    isPopular: false,
   },
   {
     id: 'growth',
@@ -36,14 +46,55 @@ const PLANS = [
     yearlyPrice: 49990,
     credits: PLAN_CREDITS.pro,
     features: ['All Premium models', '24/7 dedicated support', 'Custom integrations', 'White-labeling'],
+    isPopular: false,
   },
 ] as const;
+
+const MOCK_INVOICES = [
+  { id: 'VYR-2026-00001', service: 'Starter Subscription', amount: '₹999', date: 'May 05, 2026', status: 'Paid' },
+  { id: 'VYR-2026-00002', service: 'Growth Add-on credits', amount: '₹1,499', date: 'May 12, 2026', status: 'Paid' },
+];
 
 export default function BillingPage() {
   const { subscription, access, isLoading } = useSubscription();
   const [isYearly, setIsYearly] = useState(false);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const [devLoading, setDevLoading] = useState(false);
 
   const isActive = subscription?.status === 'active';
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_BILLING_MODE === 'true';
+
+  // Compute AI credit utilization
+  const planLimits: Record<string, number> = {
+    free: 100,
+    starter: 500,
+    growth: 2000,
+    pro: 10000,
+  };
+  const currentPlan = subscription?.plan || 'free';
+  const totalCredits = planLimits[currentPlan] || 100;
+  const remainingCredits = subscription?.ai_credits_remaining ?? 0;
+  const creditsUsed = Math.max(0, totalCredits - remainingCredits);
+  const usedPercent = Math.min(100, Math.round((creditsUsed / totalCredits) * 100));
+
+  const handleDevUpgrade = async (action: () => Promise<any>, successMsg: string) => {
+    if (!activeWorkspaceId) {
+      toast.error('No active workspace resolved.');
+      return;
+    }
+    setDevLoading(true);
+    try {
+      await action();
+      toast.success(successMsg);
+      // Wait for state updates then refresh hydration context
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
+    } catch (err: any) {
+      toast.error(err.message || 'Upgrade failed.');
+    }
+    setDevLoading(false);
+  };
 
   if (isLoading) {
     return (
@@ -61,6 +112,52 @@ export default function BillingPage() {
 
   return (
     <div className="min-h-full space-y-12 p-4 pb-20 md:p-8">
+      {/* Dev Mode Control Panel */}
+      {isDevMode && (
+        <Card className="border border-red-500/20 bg-red-500/5 backdrop-blur-xl">
+          <CardHeader className="pb-3 border-b border-red-500/10">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xs font-bold text-red-400 uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
+                <ShieldAlert className="h-4 w-4" />
+                Dev Mode Billing Bypass active
+              </CardTitle>
+              <span className="text-[10px] text-zinc-500 font-mono">Bypass gateways locally</span>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4 flex flex-wrap gap-2.5">
+            <Button
+              onClick={() => handleDevUpgrade(() => activateStarterPlan(activeWorkspaceId!), 'Starter activated! 500 AI credits provisioned.')}
+              disabled={devLoading}
+              className="bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-zinc-300 font-extrabold text-[10px] h-8 rounded-lg"
+            >
+              Activate Starter Test
+            </Button>
+            <Button
+              onClick={() => handleDevUpgrade(() => activateGrowthPlan(activeWorkspaceId!), 'Growth activated! 2000 AI credits provisioned.')}
+              disabled={devLoading}
+              className="bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-zinc-300 font-extrabold text-[10px] h-8 rounded-lg"
+            >
+              Activate Growth Test
+            </Button>
+            <Button
+              onClick={() => handleDevUpgrade(() => activateProPlan(activeWorkspaceId!), 'Pro activated! 10000 AI credits provisioned.')}
+              disabled={devLoading}
+              className="bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-zinc-300 font-extrabold text-[10px] h-8 rounded-lg"
+            >
+              Activate Pro Test
+            </Button>
+            <Button
+              onClick={() => handleDevUpgrade(() => resetSubscription(activeWorkspaceId!), 'Subscription reset to trial state.')}
+              disabled={devLoading}
+              variant="destructive"
+              className="font-bold text-[10px] h-8 rounded-lg"
+            >
+              Reset Subscription
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex flex-col gap-2">
         <motion.h1 
@@ -106,14 +203,37 @@ export default function BillingPage() {
             <div className="absolute -inset-0.5 bg-vyron-gradient opacity-10 blur-2xl" />
             
             <div className="relative z-10 flex flex-col justify-between gap-8 md:flex-row md:items-center">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-full border border-vyron-cyan/30 bg-vyron-cyan/10 px-3 py-1 text-sm text-vyron-cyan">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Premium Active</span>
+              <div className="space-y-6 flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-vyron-cyan/30 bg-vyron-cyan/10 px-3 py-1 text-sm text-vyron-cyan">
+                    <Sparkles className="h-4 w-4" />
+                    <span>Premium Active</span>
+                  </div>
+                  {isDevMode && (
+                    <span className="rounded-full bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-0.5 text-xs font-bold font-mono">
+                      DEV MODE ACTIVE
+                    </span>
+                  )}
                 </div>
                 <h2 className="text-2xl font-semibold text-white capitalize">
                   {subscription?.plan || 'Unknown'} Plan
                 </h2>
+                
+                {/* Credit Usage Progress Bar */}
+                <div className="max-w-md space-y-2">
+                  <div className="flex justify-between text-[11px] text-zinc-400 font-mono">
+                    <span>AI Credit Usage: {creditsUsed.toLocaleString()} / {totalCredits.toLocaleString()}</span>
+                    <span>{usedPercent}% used</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-zinc-900 overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full"
+                      animate={{ width: `${usedPercent}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                </div>
+
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8 text-zinc-300">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-zinc-500" />
@@ -123,7 +243,6 @@ export default function BillingPage() {
                     <Zap className="h-5 w-5 text-zinc-500" />
                     <span>AI Credits: <span className="text-white font-medium">{subscription?.ai_credits_remaining ?? 0}</span> remaining</span>
                   </div>
-                  {/* Defaulting to a placeholder renewal text for visual completeness */}
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-zinc-500" />
                     <span>Renews automatically</span>
@@ -152,9 +271,16 @@ export default function BillingPage() {
             
             <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-center">
               <div className="max-w-xl space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800/50 px-3 py-1 text-sm text-zinc-300">
-                  <Zap className="h-4 w-4 text-zinc-400" />
-                  <span>Free Tier Active</span>
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800/50 px-3 py-1 text-sm text-zinc-300">
+                    <Zap className="h-4 w-4 text-zinc-400" />
+                    <span>Free Tier Active</span>
+                  </div>
+                  {isDevMode && (
+                    <span className="rounded-full bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-0.5 text-xs font-bold font-mono">
+                      DEV MODE ACTIVE
+                    </span>
+                  )}
                 </div>
                 <h2 className="text-2xl font-bold text-white sm:text-3xl">
                   You are currently using the free plan.
@@ -208,7 +334,7 @@ export default function BillingPage() {
 
         <div className="grid gap-6 md:grid-cols-3 lg:gap-8">
           {PLANS.map((plan, i) => {
-            const isCurrent = subscription?.plan === plan.id;
+            const isCurrent = isActive && subscription?.plan === plan.id;
             const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
             const formattedPrice = new Intl.NumberFormat('en-IN', {
               style: 'currency',
@@ -248,7 +374,7 @@ export default function BillingPage() {
                     <span className="text-4xl font-bold text-white tracking-tight">{formattedPrice}</span>
                     <span className="text-sm font-medium text-zinc-500">/{isYearly ? 'yr' : 'mo'}</span>
                   </div>
-                  <p className="mt-3 text-sm font-medium text-vyron-cyan bg-vyron-cyan/10 inline-block px-3 py-1 rounded-full">
+                  <p className="mt-3 text-sm font-medium text-vyron-cyan bg-vyron-cyan/10 inline-block px-3 py-1 rounded-full text-xs">
                     {plan.credits.toLocaleString()} AI credits / mo
                   </p>
                 </div>
@@ -281,6 +407,42 @@ export default function BillingPage() {
               </motion.div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Invoice History */}
+      <div className="space-y-6 pt-6">
+        <div>
+          <h3 className="text-lg font-semibold text-white flex items-center gap-1.5">
+            <FileText className="h-5 w-5 text-violet-400" />
+            Invoice Ledger History
+          </h3>
+          <p className="text-xs text-zinc-500 mt-0.5">Immutable payment compliance summaries</p>
+        </div>
+
+        <div className="rounded-xl border border-white/10 bg-black/40 overflow-hidden text-xs">
+          <div className="grid grid-cols-5 p-3.5 bg-white/5 border-b border-white/5 text-zinc-400 font-mono text-[10px] uppercase tracking-wider">
+            <span>Invoice ID</span>
+            <span>Plan Target</span>
+            <span>Amount</span>
+            <span>Date Recieved</span>
+            <span className="text-right">Status</span>
+          </div>
+
+          <div className="divide-y divide-white/5">
+            {MOCK_INVOICES.map((inv) => (
+              <div key={inv.id} className="grid grid-cols-5 p-3.5 items-center font-mono text-zinc-300">
+                <span>{inv.id}</span>
+                <span>{inv.service}</span>
+                <span className="font-bold text-white">{inv.amount}</span>
+                <span>{inv.date}</span>
+                <span className="text-right flex items-center justify-end gap-1.5 text-emerald-400 font-bold">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {inv.status}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

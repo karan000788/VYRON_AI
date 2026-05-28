@@ -77,6 +77,22 @@ export interface Subscription {
   cancelled_at: string | null;
 }
 
+export interface TransactionMetadata {
+  payment_mode?: 'upi' | 'cash' | 'bank_transfer' | 'card';
+  payment_status?: 'completed' | 'pending' | 'failed';
+  gst_applicable?: boolean;
+  gst_rate?: number;
+  cgst_amount?: number;
+  sgst_amount?: number;
+  igst_amount?: number;
+  is_inter_state?: boolean;
+  customer_id?: string | null;
+  customer_name?: string | null;
+  tags?: string[];
+  recurring_interval?: 'none' | 'weekly' | 'monthly';
+  [key: string]: any;
+}
+
 export interface Transaction {
   id: string;
   business_id: string;
@@ -86,6 +102,22 @@ export interface Transaction {
   category: string | null;
   description: string | null;
   transaction_date: string;
+  metadata?: TransactionMetadata;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  created_by?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  business_id: string;
+  actor_id: string;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  metadata?: Record<string, any>;
   created_at: string;
 }
 

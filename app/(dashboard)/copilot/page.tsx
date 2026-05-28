@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useChat } from 'ai/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, MessageSquare, Plus, Send, Settings, Sparkles, Trash2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,17 +23,13 @@ const SUGGESTED_PROMPTS = [
 export default function CopilotPage() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading, stop } = useChat({
-    api: '/api/copilot',
-    id: currentSessionId,
-    onResponse: () => {
-      updateSessionTitle();
-    }
-  });
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Load sessions from localStorage
   useEffect(() => {
@@ -98,14 +93,6 @@ export default function CopilotPage() {
     }
   }, [messages, currentSessionId]);
 
-  const updateSessionTitle = () => {
-    if (messages.length > 0 && sessions.find(s => s.id === currentSessionId)?.title === 'New Conversation') {
-      const firstMessage = messages.find(m => m.role === 'user')?.content || 'Conversation';
-      const title = firstMessage.length > 30 ? firstMessage.substring(0, 30) + '...' : firstMessage;
-      setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, title, updatedAt: Date.now() } : s));
-    }
-  };
-
   const deleteSession = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const newSessions = sessions.filter(s => s.id !== id);
@@ -124,6 +111,97 @@ export default function CopilotPage() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const stop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsLoading(false);
+    }
+  };
+
+  const submitMessage = async (contentStr: string) => {
+    if (!contentStr.trim() || isLoading) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: contentStr.trim(),
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInput('');
+    setIsLoading(true);
+
+    // Auto-update session title if it's the first message
+    if (sessions.find(s => s.id === currentSessionId)?.title === 'New Conversation') {
+      const title = userMessage.content.length > 30 ? userMessage.content.substring(0, 30) + '...' : userMessage.content;
+      setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, title, updatedAt: Date.now() } : s));
+    }
+
+    try {
+      abortControllerRef.current = new AbortController();
+      
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: updatedMessages.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        const assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.text,
+        };
+        setMessages([...updatedMessages, assistantMessage]);
+      } else {
+        throw new Error(data.error || 'Failed to get response');
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Chat request aborted');
+      } else {
+        console.error('Chat error:', err);
+        const errorMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `⚠️ **Error**: ${err.message || 'Unable to connect to the server.'} Please try again later.`,
+        };
+        setMessages([...updatedMessages, errorMessage]);
+      }
+    } finally {
+      setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) e.preventDefault();
+    await submitMessage(input);
+  };
+
+  const handlePromptClick = async (prompt: string) => {
+    await submitMessage(prompt);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -133,15 +211,6 @@ export default function CopilotPage() {
     }
   };
 
-  const handlePromptClick = (prompt: string) => {
-    const fakeEvent = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
-    handleInputChange({ target: { value: prompt } } as React.ChangeEvent<HTMLInputElement>);
-    // We need to wait for state to update before submitting
-    setTimeout(() => {
-      const form = document.getElementById('chat-form') as HTMLFormElement;
-      if (form) form.requestSubmit();
-    }, 50);
-  };
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-black/40">
@@ -233,7 +302,7 @@ export default function CopilotPage() {
             ) : (
               <div className="space-y-6">
                 <AnimatePresence>
-                  {messages.map((message) => (
+                  {messages.map((message: any) => (
                     <motion.div
                       key={message.id}
                       initial={{ opacity: 0, y: 10 }}

@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { SubscriptionPlan } from '@/types/database';
 import { routeAIModel, type AITaskType } from './route-model';
 import { creditsForTokens } from './credits';
-import { generateText, type CoreMessage } from 'ai';
+import { generateText, type ModelMessage } from 'ai';
 import { google } from '@ai-sdk/google';
 
 const ABUSE_WINDOW_MS = 10 * 60 * 1000;
@@ -48,6 +48,16 @@ export async function enforceQuota(businessId: string): Promise<{
     throw new AIQuotaError('Subscription not found', 'SUSPENDED');
   }
 
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_BILLING_MODE === 'true';
+
+  if (isDevMode) {
+    return {
+      plan: sub.plan as SubscriptionPlan,
+      creditsRemaining: 999999,
+      status: 'active',
+    };
+  }
+
   if (['suspended'].includes(sub.status)) {
     throw new AIQuotaError('Account suspended', 'SUSPENDED');
   }
@@ -69,7 +79,7 @@ export async function runAIRequest(params: {
   businessId: string;
   userId: string;
   taskType: AITaskType;
-  messages: CoreMessage[];
+  messages: ModelMessage[];
   requestId?: string;
 }): Promise<{ content: string; model: string; creditsUsed: number }> {
   const { plan } = await enforceQuota(params.businessId);
@@ -85,27 +95,30 @@ export async function runAIRequest(params: {
     temperature: 0.4,
   });
 
-  const promptTokens = usage.promptTokens ?? 0;
-  const completionTokens = usage.completionTokens ?? 0;
+  const promptTokens = usage.inputTokens ?? 0;
+  const completionTokens = usage.outputTokens ?? 0;
   const creditsUsed = creditsForTokens(promptTokens, completionTokens);
 
   const admin = createAdminClient();
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_BILLING_MODE === 'true';
 
-  const { error: rpcError } = await admin.rpc('decrement_ai_credits', {
-    p_business_id: params.businessId,
-    p_amount: creditsUsed,
-  });
-  if (rpcError) {
-    const { data: sub } = await admin
-      .from('subscriptions')
-      .select('ai_credits_remaining')
-      .eq('business_id', params.businessId)
-      .single();
-    const remaining = Math.max(0, (sub?.ai_credits_remaining ?? 0) - creditsUsed);
-    await admin
-      .from('subscriptions')
-      .update({ ai_credits_remaining: remaining })
-      .eq('business_id', params.businessId);
+  if (!isDevMode) {
+    const { error: rpcError } = await admin.rpc('decrement_ai_credits', {
+      p_business_id: params.businessId,
+      p_amount: creditsUsed,
+    });
+    if (rpcError) {
+      const { data: sub } = await admin
+        .from('subscriptions')
+        .select('ai_credits_remaining')
+        .eq('business_id', params.businessId)
+        .single();
+      const remaining = Math.max(0, (sub?.ai_credits_remaining ?? 0) - creditsUsed);
+      await admin
+        .from('subscriptions')
+        .update({ ai_credits_remaining: remaining })
+        .eq('business_id', params.businessId);
+    }
   }
 
   await admin.from('ai_usage_logs').insert({

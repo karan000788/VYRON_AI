@@ -10,6 +10,7 @@ import {
   CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const items = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
@@ -25,25 +26,37 @@ export function MobileNav({ className }: { className?: string }) {
   return (
     <nav
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl',
+        'fixed bottom-3 left-3 right-3 z-50 rounded-2xl border border-border bg-background/80 p-2.5 backdrop-blur-xl shadow-lg',
         className
       )}
     >
-      <div className="flex justify-around px-2 py-2">
+      <div className="flex justify-around items-center px-1">
         {items.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                'flex flex-col items-center gap-0.5 rounded-lg px-3 py-1 text-[10px]',
-                active ? 'text-cyan-400' : 'text-zinc-500'
-              )}
+              className="relative flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all focus:outline-none"
             >
-              <Icon className="h-5 w-5" />
-              {item.label}
+              {active && (
+                <motion.div
+                  layoutId="activeTabMobile"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-500/10 to-violet-500/10 border border-cyan-500/20"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
+              <Icon className={cn(
+                'h-4.5 w-4.5 relative z-10 transition-colors duration-200',
+                active ? 'text-cyan-400' : 'text-zinc-500'
+              )} />
+              <span className={cn(
+                'text-[9px] font-bold mt-1 tracking-wide relative z-10 transition-colors duration-200',
+                active ? 'text-white' : 'text-zinc-500'
+              )}>
+                {item.label}
+              </span>
             </Link>
           );
         })}

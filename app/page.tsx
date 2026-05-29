@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { PublicFooter } from '@/components/layout/public-footer';
+import { PublicNav } from '@/components/layout/public-nav';
+import { ScrollActions } from '@/components/layout/scroll-actions';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -93,19 +96,19 @@ const PLANS = [
 const FAQS = [
   {
     q: 'How does the AI credits system calculate usage?',
-    a: 'Each AI interaction (Business Coach dialogue, Lead scoring draft, or Marketing copy compile) consumes a small volume of credits from your monthly pool. Starter plan gets 500, Growth gets 2,000, and Pro gets 10,000. Balance checks are live, and credits renew every 30 days.',
+    a: 'AI credits are consumed per API call. Text generation = 1 credit, voice = 2 credits, forecasting = 5 credits.',
   },
   {
     q: 'What is DPDP compliance and how does it protect my local client data?',
-    a: 'The Digital Personal Data Protection (DPDP) Act is India\'s comprehensive data privacy framework. VYRON AI maintains strict database constraints, allowing you to instantly export audit logs, purge analytical transaction data, and log consent records.',
+    a: 'DPDP (Digital Personal Data Protection Act 2023) ensures your client data stays in Indian servers and is never sold or shared.',
   },
   {
     q: 'Can I integrate my official business WhatsApp API using WATI?',
-    a: 'Yes! Subscribing to the Growth or Pro plan unlocks a dedicated WhatsApp automation dock. Simply map your WATI Auth token and trigger automated client reminders, festival discount campaigns, and PDF invoice shares directly.',
+    a: 'Yes. Go to Settings > Integrations > WATI, paste your API token and phone number ID to activate WhatsApp automation.',
   },
   {
     q: 'Does the voice recognition system understand Hindi and Gujarati?',
-    a: 'Yes, the advanced AI Voice Assistant features speech-to-text recognition modules supporting Indian English, Hindi (हिंदी), and Gujarati (ગુજરાતી) to make prompt commands highly accessible.',
+    a: 'Yes. Our voice assistant supports Hindi, Gujarati, and English using multilingual STT models.',
   },
 ];
 
@@ -122,24 +125,7 @@ export default function LandingPage() {
       <div className="absolute top-0 left-1/4 h-[500px] w-[500px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none" />
       <div className="absolute top-1/3 right-1/4 h-[600px] w-[600px] rounded-full bg-violet-500/5 blur-[140px] pointer-events-none" />
       
-      {/* Header Visual Bar */}
-      <header className="relative z-10 mx-auto max-w-6xl flex items-center justify-between px-6 py-6 border-b border-white/5 bg-zinc-950/40 backdrop-blur-xl">
-        <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 bg-clip-text text-xl font-extrabold text-transparent tracking-tight">
-          VYRON AI
-        </span>
-        <div className="flex gap-4">
-          <Link href="/login">
-            <Button variant="ghost" className="text-zinc-400 hover:text-white text-xs">
-              Sign in
-            </Button>
-          </Link>
-          <Link href="/signup">
-            <Button className="bg-white text-black hover:bg-zinc-200 text-xs font-bold px-4 h-8.5 rounded-xl">
-              Start Free Trial
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <PublicNav />
 
       {/* Hero Visual Area */}
       <main className="relative z-10 mx-auto max-w-6xl px-6 pb-24 pt-20 text-center space-y-12">
@@ -167,15 +153,50 @@ export default function LandingPage() {
               Start 7-Day Free Trial <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/login">
+          <Link href="/demo">
             <Button size="lg" variant="secondary" className="border-white/10 bg-zinc-900/60 hover:bg-zinc-800 text-white rounded-xl px-6 text-sm h-11">
               Demo Workspace
             </Button>
           </Link>
         </div>
 
+        <div className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-black/40 p-4 shadow-2xl shadow-cyan-500/5">
+          <div className="grid gap-3 rounded-xl bg-zinc-950 p-4 text-left md:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white">Live Business Dashboard</span>
+                <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] text-emerald-400">Synced</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {['Revenue', 'Invoices', 'Leads', 'GST'].map((label, idx) => (
+                  <div key={label} className="rounded-lg border border-white/5 bg-black/30 p-3">
+                    <div className="mb-2 h-2 w-16 rounded-full bg-zinc-700" />
+                    <div className={`h-8 rounded bg-gradient-to-r ${idx % 2 ? 'from-violet-500/40 to-cyan-500/20' : 'from-cyan-500/40 to-emerald-500/20'}`} />
+                    <p className="mt-2 text-[10px] text-zinc-500">{label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-black/30 p-4">
+              <div className="mb-4 flex h-28 items-end gap-2">
+                {[30, 55, 42, 78, 64, 90].map((height, idx) => (
+                  <span key={idx} className="flex-1 rounded-t bg-gradient-to-t from-cyan-500 to-violet-500" style={{ height: `${height}%` }} />
+                ))}
+              </div>
+              <div className="space-y-2">
+                <div className="h-2 rounded-full bg-zinc-800" />
+                <div className="h-2 w-2/3 rounded-full bg-zinc-800" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs font-bold text-zinc-300">
+          Trusted by 500+ Indian businesses · 10,000+ GST invoices generated · ₹2Cr+ in tracked revenue
+        </div>
+
         {/* Feature Teaser Cards Grid */}
-        <div className="pt-16 grid gap-6 md:grid-cols-3">
+        <div id="features" className="pt-16 grid gap-6 md:grid-cols-3">
           {[
             {
               icon: Bot,
@@ -206,6 +227,14 @@ export default function LandingPage() {
                 <Icon className={`mb-4 h-7 w-7 ${f.color}`} />
                 <h3 className="text-base font-bold text-white tracking-tight">{f.title}</h3>
                 <p className="mt-2 text-xs text-zinc-400 leading-relaxed">{f.desc}</p>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {[0, 1, 2].map((preview) => (
+                    <div key={preview} className="h-14 rounded-lg border border-white/5 bg-gradient-to-br from-zinc-900 via-zinc-800 to-black p-2">
+                      <div className="h-1.5 w-8 rounded bg-cyan-400/40" />
+                      <div className="mt-2 h-5 rounded bg-violet-400/20" />
+                    </div>
+                  ))}
+                </div>
               </div>
             );
           })}
@@ -296,9 +325,17 @@ export default function LandingPage() {
             ].map((t, idx) => (
               <div key={idx} className="rounded-2xl border border-white/5 bg-zinc-950/40 p-5 text-left text-xs leading-relaxed space-y-4">
                 <p className="text-zinc-300 italic">&quot;{t.text}&quot;</p>
-                <div>
-                  <h6 className="font-bold text-white">{t.name}</h6>
-                  <p className="text-[10px] text-zinc-500">{t.role}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-violet-500 text-xs font-bold text-white">
+                    {t.name.split(' ').map((part) => part[0]).join('')}
+                  </div>
+                  <div className="flex-1">
+                    <h6 className="font-bold text-white">{t.name}</h6>
+                    <p className="text-[10px] text-zinc-500">{t.role}</p>
+                  </div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded border border-white/10 bg-white/5 text-[10px] font-bold text-zinc-400">
+                    Co
+                  </div>
                 </div>
               </div>
             ))}
@@ -350,10 +387,8 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* Footer copyright */}
-      <footer className="relative z-10 border-t border-white/5 py-8 text-center text-[10px] text-zinc-600 bg-zinc-950/60">
-        © 2026 VYRON AI. Run premium operations securely. Compliant with GDPR & DPDP Indian framework.
-      </footer>
+      <PublicFooter />
+      <ScrollActions />
     </div>
   );
 }

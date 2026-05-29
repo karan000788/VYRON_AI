@@ -6,6 +6,7 @@ import { TrendingUp, BarChart2, PieChart, Landmark, Activity, Calendar } from 'l
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { formatINR } from '@/lib/utils';
+import { RealtimeManager } from '@/lib/realtime-manager';
 
 interface ChartProps {
   businessId: string;
@@ -46,31 +47,18 @@ export function DashboardCharts({ businessId }: ChartProps) {
     }
     if (businessId) {
       fetchLedger();
+      return RealtimeManager.subscribe(businessId, () => {
+        fetchLedger();
+      });
     }
   }, [businessId]);
 
   // Re-calculate charts on filters
   useEffect(() => {
     if (transactions.length === 0) {
-      // Fallback premium dummy data if business is brand new so that the UI still renders elegantly, but it will seamlessly pull real values when added.
-      const dummyRevEx = [
-        { label: 'Jan', income: 45000, expense: 28000 },
-        { label: 'Feb', income: 68000, expense: 32000 },
-        { label: 'Mar', income: 94000, expense: 41000 },
-        { label: 'Apr', income: 82000, expense: 39000 },
-        { label: 'May', income: 125000, expense: 62000 },
-        { label: 'Jun', income: 154000, expense: 58000 },
-      ];
-      setRevenueExpensesData(dummyRevEx);
-
-      setCategoryData([
-        { category: 'Software/SaaS', amount: 24000, pct: 45, color: COLORS[0] },
-        { category: 'Office Rent', amount: 15000, pct: 28, color: COLORS[1] },
-        { category: 'Marketing/Ads', amount: 9000, pct: 17, color: COLORS[2] },
-        { category: 'Utilities', amount: 5000, pct: 10, color: COLORS[3] },
-      ]);
-
-      setGstData({ cgst: 8400, sgst: 8400, igst: 3600, total: 20400 });
+      setRevenueExpensesData([]);
+      setCategoryData([]);
+      setGstData({ cgst: 0, sgst: 0, igst: 0, total: 0 });
       return;
     }
 
@@ -169,8 +157,20 @@ export function DashboardCharts({ businessId }: ChartProps) {
 
   const maxVal = Math.max(
     ...revenueExpensesData.map((d) => Math.max(d.income, d.expense)),
-    10000
+    1
   );
+
+  if (!loading && transactions.length === 0) {
+    return (
+      <Card className="border border-white/10 bg-zinc-950/40 backdrop-blur-xl">
+        <CardContent className="p-8 text-center">
+          <BarChart2 className="mx-auto mb-3 h-8 w-8 text-zinc-600" />
+          <p className="text-sm font-semibold text-white">No transactions yet. Create your first invoice to see analytics.</p>
+          <p className="mt-1 text-xs text-zinc-500">Revenue, GST, category, and activity charts update automatically as records are added.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const getPointsString = (type: 'income' | 'expense') => {
     if (revenueExpensesData.length < 2) return '';

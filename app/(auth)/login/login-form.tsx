@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
-import { signInAction, type AuthResult } from '@/lib/actions/auth';
+import { signInAction, signInWithGoogleAction, type AuthResult } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -19,6 +21,7 @@ function SubmitButton() {
 
 export default function LoginForm() {
   const [state, formAction] = useFormState<AuthResult | null, FormData>(signInAction, null);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
@@ -48,15 +51,34 @@ export default function LoginForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  className="absolute inset-y-0 right-2 flex items-center text-zinc-500 hover:text-white"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <Link href="/forgot-password" className="inline-block text-xs text-cyan-400 hover:underline">
+                Forgot Password?
+              </Link>
             </div>
             <SubmitButton />
+          </form>
+          <form action={signInWithGoogleAction} className="mt-3">
+            <Button type="submit" variant="secondary" className="w-full border-white/10 bg-white/5 text-white">
+              Continue with Google
+            </Button>
           </form>
           <p className="mt-4 text-center text-sm text-zinc-500">
             No account?{' '}

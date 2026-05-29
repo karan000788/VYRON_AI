@@ -1,15 +1,27 @@
 import { createClient } from '@/lib/supabase/client';
 
 export class RealtimeManager {
-  private static supabase = createClient();
+  private static supabase: ReturnType<typeof createClient> | null = null;
   private static channel: any = null;
   private static listeners: Set<(payload: any) => void> = new Set();
 
+  private static getClient() {
+    if (!this.supabase) {
+      this.supabase = createClient();
+    }
+
+    return this.supabase;
+  }
+
   static subscribe(businessId: string, callback: (payload: any) => void) {
+    if (typeof window === 'undefined') {
+      return () => {};
+    }
+
     this.listeners.add(callback);
     
     if (!this.channel) {
-      this.channel = this.supabase
+      this.channel = this.getClient()
         .channel(`workspace-${businessId}`)
         .on(
           'postgres_changes',

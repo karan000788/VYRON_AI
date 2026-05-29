@@ -1,32 +1,52 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Users, Sparkles } from 'lucide-react';
+import { Building2, FileText, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatINR } from '@/lib/utils';
 
 interface Props {
-  income: number;
-  expense: number;
-  leads: number;
-  credits: number;
-  plan: string;
-  status: string;
+  totalRevenue: number;
+  totalLeads: number;
+  invoicesSent: number;
+  activeClients: number;
 }
 
 export function DashboardStats({
-  income,
-  expense,
-  leads,
-  credits,
-  plan,
-  status,
+  totalRevenue,
+  totalLeads,
+  invoicesSent,
+  activeClients,
 }: Props) {
   const items = [
-    { label: 'Income (MTD)', value: formatINR(income), icon: TrendingUp, color: 'text-emerald-400' },
-    { label: 'Expenses (MTD)', value: formatINR(expense), icon: TrendingDown, color: 'text-red-400' },
-    { label: 'Active leads', value: String(leads), icon: Users, color: 'text-cyan-400' },
-    { label: 'AI credits', value: String(credits), icon: Sparkles, color: 'text-violet-400' },
+    {
+      label: 'Total Revenue',
+      value: formatINR(totalRevenue),
+      helper: totalRevenue === 0 ? 'Create your first invoice →' : 'From income transactions',
+      icon: TrendingUp,
+      color: 'text-emerald-400',
+    },
+    {
+      label: 'Total Leads',
+      value: String(totalLeads),
+      helper: totalLeads === 0 ? 'Add your first lead →' : 'Live CRM count',
+      icon: Users,
+      color: 'text-cyan-400',
+    },
+    {
+      label: 'Invoices Sent',
+      value: String(invoicesSent),
+      helper: invoicesSent === 0 ? 'Create your first invoice →' : 'Sent, paid, and overdue',
+      icon: FileText,
+      color: 'text-violet-400',
+    },
+    {
+      label: 'Active Clients',
+      value: String(activeClients),
+      helper: activeClients === 0 ? 'Add your first client →' : 'Customer records',
+      icon: Building2,
+      color: 'text-amber-400',
+    },
   ];
 
   return (
@@ -46,15 +66,13 @@ export function DashboardStats({
                 <div>
                   <p className="text-xs text-zinc-500">{item.label}</p>
                   <p className="text-xl font-semibold">{item.value}</p>
+                  <p className="mt-1 text-[10px] text-zinc-600">{item.helper}</p>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
         );
       })}
-      <p className="col-span-full text-xs text-zinc-600 capitalize">
-        {plan} plan · {status.replace('_', ' ')}
-      </p>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { SmartAlertSystem } from '@/components/dashboard/smart-alerts';
 import { LoyaltyRewards } from '@/components/dashboard/loyalty';
 import { SmartOnboarding } from '@/components/dashboard/smart-onboarding';
 import { DashboardCharts } from '@/components/dashboard/dashboard-charts';
+import { DashboardRefreshButton } from '@/components/dashboard/dashboard-refresh-button';
 import { redirect } from 'next/navigation';
 
 export default async function DashboardPage() {
@@ -36,6 +37,12 @@ export default async function DashboardPage() {
     .eq('deleted_at', null)
     .gte('transaction_date', monthStart);
 
+  const { data: allTransactions } = await supabase
+    .from('transactions')
+    .select('type, amount_inr')
+    .eq('business_id', businessId)
+    .eq('deleted_at', null);
+
   let income = 0;
   let expense = 0;
   for (const t of transactions ?? []) {
@@ -44,12 +51,27 @@ export default async function DashboardPage() {
     if (t.type === 'expense') expense += amt;
   }
 
+  const totalRevenue = (allTransactions ?? []).reduce((sum, t) => {
+    return t.type === 'income' ? sum + Number(t.amount_inr) : sum;
+  }, 0);
+
   // Fetch leads
   const { count: leadCount } = await supabase
     .from('leads')
     .select('*', { count: 'exact', head: true })
     .eq('business_id', businessId)
     .neq('status', 'lost');
+
+  const { count: invoicesSent } = await supabase
+    .from('invoices')
+    .select('*', { count: 'exact', head: true })
+    .eq('business_id', businessId)
+    .in('status', ['sent', 'paid', 'overdue']);
+
+  const { count: activeClients } = await supabase
+    .from('customers')
+    .select('*', { count: 'exact', head: true })
+    .eq('business_id', businessId);
 
   return (
     <div className="space-y-8 relative z-10">
@@ -66,16 +88,15 @@ export default async function DashboardPage() {
         <span className="self-start sm:self-auto rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold text-zinc-400 font-mono">
           MTD ledger calculations active
         </span>
+        <DashboardRefreshButton />
       </div>
 
       {/* Overview Stats Cards */}
       <DashboardStats
-        income={income}
-        expense={expense}
-        leads={leadCount ?? 0}
-        credits={sub?.ai_credits_remaining ?? 0}
-        plan={sub?.plan ?? 'starter'}
-        status={sub?.status ?? 'trialing'}
+        totalRevenue={totalRevenue}
+        totalLeads={leadCount ?? 0}
+        invoicesSent={invoicesSent ?? 0}
+        activeClients={activeClients ?? 0}
       />
 
       {/* Advanced Financial SVG Charts */}

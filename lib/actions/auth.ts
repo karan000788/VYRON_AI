@@ -51,6 +51,27 @@ export async function signInAction(
   return redirectAfterAuth(supabase, data.user.id);
 }
 
+export async function signInWithGoogleAction(): Promise<never | AuthResult> {
+  if (!isSupabaseConfigured()) {
+    return { error: 'Supabase is not configured. Check .env.local and restart the dev server.' };
+  }
+
+  const supabase = await createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${siteUrl}/api/auth/callback?next=/dashboard`,
+    },
+  });
+
+  if (error || !data.url) {
+    return { error: error?.message || 'Google sign-in could not be started.' };
+  }
+
+  redirect(data.url);
+}
+
 export async function signUpAction(
   _prev: AuthResult | null,
   formData: FormData
@@ -61,7 +82,11 @@ export async function signUpAction(
 
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  const confirmPassword = String(formData.get('confirmPassword') ?? '');
   const fullName = String(formData.get('fullName') ?? '').trim();
+  const businessName = String(formData.get('businessName') ?? '').trim();
+  const phone = String(formData.get('phone') ?? '').replace(/\D/g, '');
+  const gstin = String(formData.get('gstin') ?? '').trim().toUpperCase();
   const consent = formData.get('consent') === 'on';
 
   if (!consent) {
@@ -72,11 +97,34 @@ export async function signUpAction(
     return { error: 'Valid email and password (8+ characters) are required.' };
   }
 
+  if (password !== confirmPassword) {
+    return { error: 'Passwords do not match.' };
+  }
+
+  if (!businessName) {
+    return { error: 'Business name is required.' };
+  }
+
+  if (!/^[6-9]\d{9}$/.test(phone)) {
+    return { error: 'Enter a valid 10-digit Indian phone number for WhatsApp.' };
+  }
+
+  if (gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) {
+    return { error: 'GST number must be a valid 15-character GSTIN.' };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: {
+      data: {
+        full_name: fullName,
+        business_name: businessName,
+        phone: `+91${phone}`,
+        gstin,
+      },
+    },
   });
 
   if (error) {
@@ -146,4 +194,25 @@ export async function resendConfirmationEmail(email: string): Promise<AuthResult
   const { error } = await supabase.auth.resend({ type: 'signup', email });
   if (error) return { error: error.message };
   return { message: 'Confirmation email sent.' };
+}
+
+export async function resetPasswordAction(
+  _prev: AuthResult | null,
+  formData: FormData
+): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) {
+    return { error: 'Supabase is not configured. Check .env.local and restart the dev server.' };
+  }
+
+  const email = String(formData.get('email') ?? '').trim();
+  if (!email) return { error: 'Email is required.' };
+
+  const supabase = await createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/login`,
+  });
+
+  if (error) return { error: error.message };
+  return { message: 'Password reset link sent. Check your inbox.' };
 }

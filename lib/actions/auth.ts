@@ -51,9 +51,9 @@ export async function signInAction(
   return redirectAfterAuth(supabase, data.user.id);
 }
 
-export async function signInWithGoogleAction(): Promise<never | AuthResult> {
+export async function signInWithGoogleAction(_formData: FormData): Promise<void> {
   if (!isSupabaseConfigured()) {
-    return { error: 'Supabase is not configured. Check .env.local and restart the dev server.' };
+    throw new Error('Supabase is not configured. Check .env.local and restart the dev server.');
   }
 
   const supabase = await createClient();
@@ -66,7 +66,7 @@ export async function signInWithGoogleAction(): Promise<never | AuthResult> {
   });
 
   if (error || !data.url) {
-    return { error: error?.message || 'Google sign-in could not be started.' };
+    throw new Error(error?.message || 'Google sign-in could not be started.');
   }
 
   redirect(data.url);

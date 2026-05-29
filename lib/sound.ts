@@ -1,6 +1,6 @@
 'use client';
 
-export function playChime(type: 'success' | 'warning' | 'info' | 'delete' = 'success') {
+export function playChime(type: 'success' | 'warning' | 'info' | 'delete' | 'click' = 'success') {
   if (typeof window === 'undefined') return;
   try {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { playChime } from '@/lib/sound';
+import { formatINR } from '@/lib/utils';
 import { Plus, Users, Landmark, FileText, Percent, RefreshCw, Sparkles, Check, ChevronDown } from 'lucide-react';
 import type { TransactionType } from '@/types/database';
 import { AnimatePresence, motion } from 'framer-motion';

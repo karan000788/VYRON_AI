@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,6 +12,7 @@ import {
   activateProPlan,
   resetSubscription,
 } from '@/lib/dev/fake-subscription';
+import { upgradeDevSubscription } from '@/lib/dev/upgrade-subscription-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Sparkles, CreditCard, Calendar, Zap, ArrowRight, ShieldAlert, FileText, CheckCircle2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -60,6 +61,8 @@ export default function BillingPage() {
   const [isYearly, setIsYearly] = useState(false);
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
   const [devLoading, setDevLoading] = useState(false);
+  const [managementOpen, setManagementOpen] = useState(false);
+  const plansRef = useRef<HTMLDivElement>(null);
 
   const isActive = subscription?.status === 'active';
   const isDevMode = process.env.NEXT_PUBLIC_DEV_BILLING_MODE === 'true';
@@ -94,6 +97,25 @@ export default function BillingPage() {
       toast.error(err.message || 'Upgrade failed.');
     }
     setDevLoading(false);
+  };
+
+  const handlePlanCheckout = async (plan: (typeof PLANS)[number]) => {
+    if (!isDevMode) {
+      toast.error('Payment gateway is not configured for this environment yet.');
+      return;
+    }
+
+    await handleDevUpgrade(
+      () => upgradeDevSubscription(activeWorkspaceId!, plan.id),
+      `${plan.name} activated! ${plan.credits.toLocaleString()} AI credits provisioned.`
+    );
+  };
+
+  const openBillingManagement = () => {
+    setManagementOpen(true);
+    setTimeout(() => {
+      plansRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   if (isLoading) {
@@ -251,8 +273,8 @@ export default function BillingPage() {
               </div>
 
               <div className="flex-shrink-0">
-                <Button size="lg" className="bg-white text-black hover:bg-zinc-200 group">
-                  Manage Subscription
+                <Button size="lg" onClick={openBillingManagement} className="bg-white text-black hover:bg-zinc-200 group">
+                  Update Subscription
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </div>
@@ -291,8 +313,8 @@ export default function BillingPage() {
               </div>
 
               <div className="flex-shrink-0">
-                <Button size="lg" variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm shadow-xl">
-                  Continue Free
+                <Button size="lg" variant="outline" onClick={openBillingManagement} className="border-white/10 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm shadow-xl">
+                  View Upgrade Plans
                 </Button>
               </div>
             </div>
@@ -301,7 +323,13 @@ export default function BillingPage() {
       </AnimatePresence>
 
       {/* Pricing Plans */}
-      <div className="space-y-8 pt-8">
+      <div
+        ref={plansRef}
+        id="billing-plans"
+        className={`space-y-8 pt-8 scroll-mt-8 transition-all duration-500 ${
+          managementOpen ? 'rounded-2xl ring-1 ring-vyron-cyan/40 ring-offset-4 ring-offset-black/0' : ''
+        }`}
+      >
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>
             <h3 className="text-2xl font-bold text-white">Upgrade your plan</h3>
@@ -392,6 +420,7 @@ export default function BillingPage() {
 
                 <Button 
                   size="lg"
+                  onClick={() => handlePlanCheckout(plan)}
                   className={`w-full group rounded-xl transition-all duration-300 ${
                     isCurrent 
                       ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-800 cursor-default' 
@@ -399,7 +428,7 @@ export default function BillingPage() {
                         ? 'bg-gradient-to-r from-vyron-cyan to-vyron-purple text-white hover:opacity-90 shadow-lg hover:shadow-vyron-cyan/25'
                         : 'bg-white text-black hover:bg-zinc-200'
                   }`}
-                  disabled={isCurrent}
+                  disabled={isCurrent || devLoading}
                 >
                   {isCurrent ? 'Current Plan' : 'Upgrade Now'}
                   {!isCurrent && <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />}
@@ -411,7 +440,12 @@ export default function BillingPage() {
       </div>
 
       {/* Invoice History */}
-      <div className="space-y-6 pt-6">
+      <div
+        id="billing-invoices"
+        className={`space-y-6 pt-6 transition-all duration-500 ${
+          managementOpen ? 'rounded-2xl ring-1 ring-white/10 ring-offset-4 ring-offset-black/0' : ''
+        }`}
+      >
         <div>
           <h3 className="text-lg font-semibold text-white flex items-center gap-1.5">
             <FileText className="h-5 w-5 text-violet-400" />

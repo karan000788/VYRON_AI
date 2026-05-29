@@ -1,12 +1,15 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useFeatureGate } from '@/hooks/use-feature-gate';
+import { useWorkspace } from '@/hooks/use-workspace';
 import { type FeatureKey } from '@/lib/subscription/feature-gate';
+import { upgradeDevSubscription } from '@/lib/dev/upgrade-subscription-client';
 import { Button } from '@/components/ui/button';
 import { Lock, Sparkles, CreditCard } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface FeatureGateShieldProps {
   feature: FeatureKey;
@@ -21,8 +24,39 @@ export function FeatureGateShield({
   children,
   fallbackClassName,
 }: FeatureGateShieldProps) {
+  const router = useRouter();
+  const { activeId } = useWorkspace();
   const { checkAccess, isLoading } = useFeatureGate();
+  const [upgradeLoading, setUpgradeLoading] = React.useState(false);
   const hasAccess = checkAccess(feature);
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_BILLING_MODE === 'true';
+
+  const handleUpgrade = async () => {
+    if (!isDevMode) {
+      router.push('/billing#billing-plans');
+      return;
+    }
+
+    if (!activeId) {
+      toast.error('No active workspace resolved.');
+      return;
+    }
+
+    const plan = requiredPlan.toLowerCase() as 'starter' | 'growth' | 'pro';
+
+    setUpgradeLoading(true);
+    try {
+      await upgradeDevSubscription(activeId, plan);
+      toast.success(`${requiredPlan} plan activated. Premium modules are unlocking now.`);
+      router.refresh();
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
+    } catch (err: any) {
+      toast.error(err.message || 'Upgrade failed.');
+      setUpgradeLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -61,12 +95,16 @@ export function FeatureGateShield({
             This module requires the <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent font-bold">{requiredPlan}</span> plan or higher. Upgrade to unlock full business performance.
           </p>
 
-          <Link href="/billing" className="w-full pt-2">
-            <Button className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white hover:opacity-90 shadow-lg shadow-cyan-500/10 rounded-xl gap-2 text-xs h-9">
+          <div className="w-full pt-2">
+            <Button
+              onClick={handleUpgrade}
+              disabled={upgradeLoading}
+              className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white hover:opacity-90 shadow-lg shadow-cyan-500/10 rounded-xl gap-2 text-xs h-9"
+            >
               <CreditCard className="h-3.5 w-3.5" />
-              Upgrade to {requiredPlan}
+              {upgradeLoading ? 'Activating...' : `Upgrade to ${requiredPlan}`}
             </Button>
-          </Link>
+          </div>
         </motion.div>
       </div>
     </div>
